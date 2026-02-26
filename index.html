@@ -750,12 +750,190 @@
   .flex-gap { display: flex; gap: 8px; }
   .color-muted { color: var(--muted); }
 
-  @media (max-width: 768px) {
-    .stats-grid { grid-template-columns: repeat(2,1fr); }
-    .content { padding: 16px; }
-    .header { padding: 0 16px; }
-    .brand { margin-right: 20px; font-size: 22px; }
-    .nav-btn { padding: 22px 12px; }
+  /* ── Bottom nav (hidden on desktop) ── */
+  .bottom-nav { display: none; }
+
+  /* ── Page header actions wrapper ── */
+  .page-header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── min-width on table so scroll works ── */
+  table { min-width: 480px; }
+
+  /* ============================================================
+     TABLET  ≤ 900px
+  ============================================================ */
+  @media (max-width: 900px) {
+    .header  { padding: 0 20px; }
+    .brand   { margin-right: 24px; font-size: 24px; }
+    .nav-btn { padding: 0 14px; font-size: 10px; letter-spacing: 1px; height: 62px; display:flex; align-items:center; }
+    .content { padding: 22px 20px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .page-title { font-size: 32px; }
+  }
+
+  /* ============================================================
+     MOBILE  ≤ 640px  — bottom tab bar, stacked layouts
+  ============================================================ */
+  @media (max-width: 640px) {
+
+    /* ── Header: only brand + logout ── */
+    .header  { padding: 0 16px; height: 54px; }
+    .brand   { font-size: 22px; letter-spacing: 3px; margin-right: 0; }
+    .nav     { display: none; }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      z-index: 50;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .bottom-nav-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: color 0.2s;
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 6px 4px;
+      position: relative;
+    }
+
+    .bottom-nav-btn .bnav-icon { font-size: 18px; line-height: 1; }
+    .bottom-nav-btn.active { color: var(--accent); }
+    .bottom-nav-btn.active::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%; right: 20%;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    /* Push content above bottom nav */
+    #app { padding-bottom: 60px; }
+
+    /* ── Content ── */
+    .content { padding: 14px 12px; }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 16px; gap: 10px; }
+    .page-title  { font-size: 26px; letter-spacing: 2px; }
+    .page-header-actions { width: 100%; }
+    .page-header-actions .btn { flex: 1; justify-content: center; }
+
+    /* ── Stats: 2×2 ── */
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat-card  { padding: 14px 12px; }
+    .stat-value { font-size: 28px; }
+    .stat-label { font-size: 9px; }
+    .stat-desc  { display: none; }
+
+    /* ── Tables: horizontal scroll, hide low-priority columns ── */
+    table { min-width: 360px; }
+    th, td { padding: 10px 12px; }
+    th { font-size: 9px; }
+    td { font-size: 12px; }
+
+    /* Stock table: hide Unidad and Stock Mínimo on mobile */
+    #stock-table tr td:nth-child(3),
+    #stock-table tr td:nth-child(4),
+    #stock-table + thead th:nth-child(3),
+    #stock-table + thead th:nth-child(4) { display: none; }
+
+    .table-wrap thead tr th:nth-child(3).hide-m,
+    .table-wrap tbody tr td:nth-child(3).hide-m { display: none; }
+
+    /* History table: hide # and Referencia and Notas */
+    #history-table tr td:nth-child(1),
+    #history-table tr td:nth-child(4),
+    #history-table tr td:nth-child(6) { display: none; }
+
+    /* ── Delivery rows: reflow to 2 rows on mobile ── */
+    .delivery-item-row {
+      grid-template-columns: 1fr 80px;
+      grid-template-rows: auto auto;
+    }
+
+    .ac-wrap {
+      grid-column: 1 / -1;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .del-qty {
+      grid-column: 1;
+      grid-row: 2;
+      border-right: 1px solid var(--border);
+      text-align: left;
+      padding: 11px 12px;
+    }
+
+    .del-item-remove {
+      grid-column: 2;
+      grid-row: 2;
+      min-height: 44px;
+    }
+
+    /* ── Forms ── */
+    .form-section { padding: 14px; }
+    .form-section-title { font-size: 17px; }
+    .form-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 0; }
+    .form-input, .form-select { font-size: 16px; } /* prevents iOS zoom */
+    .ac-search { font-size: 16px; }
+
+    /* ── Delivery action buttons ── */
+    .delivery-actions { flex-direction: column !important; }
+    .delivery-actions .btn { width: 100%; justify-content: center; }
+
+    /* ── Modal: slide up from bottom ── */
+    .modal-overlay { padding: 0; align-items: flex-end; }
+    .modal {
+      max-width: 100%;
+      max-height: 92dvh;
+      padding: 20px 16px;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
+    }
+    .modal-footer .btn { flex: 1; justify-content: center; }
+
+    /* ── Toast: above bottom nav ── */
+    .toast-container {
+      bottom: 72px;
+      left: 12px;
+      right: 12px;
+    }
+    .toast { max-width: 100%; }
+
+    /* ── Logout btn ── */
+    .logout-btn { padding: 5px 10px; font-size: 9px; }
+  }
+
+  /* ============================================================
+     EXTRA SMALL  ≤ 380px
+  ============================================================ */
+  @media (max-width: 380px) {
+    .login-box { padding: 32px 20px; }
+    .login-title { font-size: 40px; }
+    .page-title { font-size: 22px; }
+    .stats-grid { gap: 8px; }
+    .stat-value { font-size: 24px; }
+    .bottom-nav-btn { font-size: 8px; }
+    .bottom-nav-btn .bnav-icon { font-size: 16px; }
   }
 </style>
 </head>
@@ -791,6 +969,22 @@
     </div>
   </div>
 
+  <!-- Bottom nav (mobile only) -->
+  <nav class="bottom-nav">
+    <button class="bottom-nav-btn active" onclick="showTab('stock', this); syncBottomNav(this)">
+      <span class="bnav-icon">📦</span>Stock
+    </button>
+    <button class="bottom-nav-btn" onclick="showTab('delivery', this); syncBottomNav(this)">
+      <span class="bnav-icon">📤</span>Entrega
+    </button>
+    <button class="bottom-nav-btn" onclick="showTab('history', this); syncBottomNav(this)">
+      <span class="bnav-icon">📋</span>Historial
+    </button>
+    <button class="bottom-nav-btn" onclick="showTab('items', this); syncBottomNav(this)">
+      <span class="bnav-icon">⚙️</span>Items
+    </button>
+  </nav>
+
   <div class="content">
 
     <!-- STOCK TAB -->
@@ -800,7 +994,7 @@
           <div class="page-title">STOCK ACTUAL</div>
           <div class="page-subtitle">Inventario en tiempo real</div>
         </div>
-        <div class="flex-gap">
+        <div class="page-header-actions">
           <button class="btn btn-outline" onclick="exportStock()">Exportar Excel</button>
         </div>
       </div>
@@ -868,7 +1062,7 @@
         <button class="btn btn-outline btn-sm" onclick="addDeliveryRow()">+ Añadir item</button>
       </div>
 
-      <div style="display:flex;gap:12px;justify-content:flex-end;">
+      <div style="display:flex;gap:12px;justify-content:flex-end;" class="delivery-actions">
         <button class="btn btn-outline" onclick="clearDelivery()">Limpiar</button>
         <button class="btn btn-success" onclick="submitDelivery()">Registrar Entrega</button>
       </div>
@@ -881,7 +1075,7 @@
           <div class="page-title">HISTORIAL ENTREGAS</div>
           <div class="page-subtitle">Todas las salidas registradas</div>
         </div>
-        <div class="flex-gap">
+        <div class="page-header-actions">
           <button class="btn btn-outline" onclick="exportDeliveries()">Exportar Excel</button>
         </div>
       </div>
@@ -1099,9 +1293,15 @@ function showTab(tab, btn) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  btn.classList.add('active');
+  // Highlight in whichever nav the button belongs to
+  if (btn) btn.classList.add('active');
   if (tab === 'delivery') refreshDeliverySelects();
   if (tab !== 'stock') { activeStateFilter = null; }
+}
+
+function syncBottomNav(btn) {
+  document.querySelectorAll('.bottom-nav-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
 }
 
 // ========== STATS ==========
