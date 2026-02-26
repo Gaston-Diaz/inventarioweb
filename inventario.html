@@ -610,9 +610,16 @@
     outline: none;
     width: 100%;
     text-align: right;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
   }
 
   .del-qty::-webkit-inner-spin-button { opacity: 0.4; }
+
+  .del-qty.over-stock {
+    color: var(--danger);
+    border-right-color: var(--danger);
+    background: rgba(224,80,80,0.07);
+  }
 
   .del-item-remove {
     background: none;
@@ -1094,37 +1101,56 @@ function showTab(tab, btn) {
   document.getElementById('tab-' + tab).classList.add('active');
   btn.classList.add('active');
   if (tab === 'delivery') refreshDeliverySelects();
+  if (tab !== 'stock') { activeStateFilter = null; }
 }
 
 // ========== STATS ==========
+let activeStateFilter = null; // 'ok' | 'low' | 'empty' | null
+
 function renderStats() {
   const total = items.length;
   const lowStock = items.filter(i => i.stock > 0 && i.stock < i.minStock).length;
   const outOfStock = items.filter(i => i.stock === 0).length;
-  const totalDeliveries = deliveries.length;
+  const okStock = total - lowStock - outOfStock;
 
   document.getElementById('stats-grid').innerHTML = `
-    <div class="stat-card">
+    <div class="stat-card" onclick="toggleStateFilter(null)" id="sc-total">
       <div class="stat-label">Total Items</div>
       <div class="stat-value">${total}</div>
       <div class="stat-desc">En catálogo</div>
     </div>
-    <div class="stat-card" style="--accent:var(--success)">
+    <div class="stat-card" style="--accent:var(--success)" onclick="toggleStateFilter('ok')" id="sc-ok">
       <div class="stat-label">Stock OK</div>
-      <div class="stat-value" style="color:var(--success)">${total - lowStock - outOfStock}</div>
+      <div class="stat-value" style="color:var(--success)">${okStock}</div>
       <div class="stat-desc">Sobre el mínimo</div>
     </div>
-    <div class="stat-card" style="--accent:var(--low)">
+    <div class="stat-card" style="--accent:var(--low)" onclick="toggleStateFilter('low')" id="sc-low">
       <div class="stat-label">Stock Bajo</div>
       <div class="stat-value" style="color:var(--low)">${lowStock}</div>
       <div class="stat-desc">Bajo el mínimo</div>
     </div>
-    <div class="stat-card" style="--accent:var(--danger)">
+    <div class="stat-card" style="--accent:var(--danger)" onclick="toggleStateFilter('empty')" id="sc-empty">
       <div class="stat-label">Sin Stock</div>
       <div class="stat-value" style="color:var(--danger)">${outOfStock}</div>
       <div class="stat-desc">Agotados</div>
     </div>
   `;
+  updateStatCardHighlight();
+}
+
+function toggleStateFilter(state) {
+  // Clicking the same filter again → clear it
+  activeStateFilter = (activeStateFilter === state) ? null : state;
+  updateStatCardHighlight();
+  renderStock();
+}
+
+function updateStatCardHighlight() {
+  ['sc-total','sc-ok','sc-low','sc-empty'].forEach(id => {
+    document.getElementById(id)?.classList.remove('active-filter');
+  });
+  const map = { null: 'sc-total', ok: 'sc-ok', low: 'sc-low', empty: 'sc-empty' };
+  document.getElementById(map[activeStateFilter])?.classList.add('active-filter');
 }
 
 // ========== STOCK ==========
@@ -1138,9 +1164,13 @@ function renderStock(search = '', cat = '') {
   if (!cat) cat = document.getElementById('cat-filter')?.value || '';
   let data = items.filter(i => {
     const s = search.toLowerCase();
-    const matchSearch = !s || i.name.toLowerCase().includes(s) || i.category.toLowerCase().includes(s);
+    const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s);
     const matchCat = !cat || i.category === cat;
-    return matchSearch && matchCat;
+    let matchState = true;
+    if (activeStateFilter === 'ok')    matchState = i.stock > 0 && i.stock >= i.minStock;
+    if (activeStateFilter === 'low')   matchState = i.stock > 0 && i.stock < i.minStock;
+    if (activeStateFilter === 'empty') matchState = i.stock === 0;
+    return matchSearch && matchCat && matchState;
   });
 
   const tbody = document.getElementById('stock-table');
@@ -1426,7 +1456,13 @@ function selectAcItem(rowId, itemId) {
   // Enable qty input
   const rowEl = document.querySelector(`.delivery-item-row[data-row="${rowId}"]`);
   const qtyInput = rowEl ? rowEl.querySelector('.del-qty') : null;
-  if (qtyInput) { qtyInput.disabled = false; qtyInput.style.opacity = '1'; qtyInput.focus(); qtyInput.select(); }
+  if (qtyInput) {
+    qtyInput.disabled = false;
+    qtyInput.style.opacity = '1';
+    qtyInput.classList.remove('over-stock');
+    qtyInput.focus();
+    qtyInput.select();
+  }
 
   // Close dropdown
   const drop = document.getElementById('ac-drop-' + rowId);
@@ -1477,7 +1513,15 @@ function setDeliveryItem(id, val) {
 }
 
 function setDeliveryQty(id, val) {
-  deliveryRows.find(r => r.id === id).qty = parseInt(val) || 0;
+  const row = deliveryRows.find(r => r.id === id);
+  row.qty = parseInt(val) || 0;
+
+  // Visual feedback if quantity exceeds available stock
+  const item = row.itemId ? items.find(i => i.id === row.itemId) : null;
+  const qtyInput = document.querySelector(`.delivery-item-row[data-row="${id}"] .del-qty`);
+  if (qtyInput && item) {
+    qtyInput.classList.toggle('over-stock', row.qty > item.stock);
+  }
 }
 
 async function submitDelivery() {
