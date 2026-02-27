@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -12,10 +14,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Formato inválido' });
     }
 
-    // Save both keys in parallel
     await Promise.all([
-      kv.set('inv-items',      items),
-      kv.set('inv-deliveries', deliveries),
+      redis.set('inv-items',      items),
+      redis.set('inv-deliveries', deliveries),
     ]);
 
     res.status(200).json({ ok: true });

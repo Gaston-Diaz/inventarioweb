@@ -1,4 +1,6 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
+
+const redis = Redis.fromEnv();
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -6,8 +8,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const items      = await kv.get('inv-items')      ?? [];
-    const deliveries = await kv.get('inv-deliveries') ?? [];
+    const items      = await redis.get('inv-items')      ?? [];
+    const deliveries = await redis.get('inv-deliveries') ?? [];
     res.status(200).json({ items, deliveries });
   } catch (err) {
     console.error('Load error:', err);
