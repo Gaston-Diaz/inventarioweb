@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    { "source": "/api/auth", "destination": "/api/auth" },
+    { "source": "/api/load", "destination": "/api/load" },
+    { "source": "/api/save", "destination": "/api/save" },
+    { "source": "/(.*)",     "destination": "/public/index.html" }
+  ]
+}
