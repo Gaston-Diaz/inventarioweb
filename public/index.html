@@ -1867,8 +1867,37 @@ async function deleteDelivery(id) {
 }
 
 // ========== EXCEL EXPORT ==========
+function getFilteredStock() {
+  const search = document.querySelector('#tab-stock .search-input')?.value || '';
+  const cat    = document.getElementById('cat-filter')?.value || '';
+  return items.filter(i => {
+    const s = search.toLowerCase();
+    const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s);
+    const matchCat    = !cat || i.category === cat;
+    let matchState    = true;
+    if (activeStateFilter === 'ok')    matchState = i.stock > 0 && i.stock >= i.minStock;
+    if (activeStateFilter === 'low')   matchState = i.stock > 0 && i.stock < i.minStock;
+    if (activeStateFilter === 'empty') matchState = i.stock === 0;
+    return matchSearch && matchCat && matchState;
+  });
+}
+
+function getFilteredDeliveries() {
+  const search = document.querySelector('#tab-history .search-input')?.value || '';
+  if (!search) return deliveries;
+  const s = search.toLowerCase();
+  return deliveries.filter(d =>
+    d.recipient.toLowerCase().includes(s) ||
+    (d.ref||'').toLowerCase().includes(s) ||
+    d.items.some(i => i.name.toLowerCase().includes(s))
+  );
+}
+
 function exportStock() {
-  const data = items.map((i, idx) => ({
+  const filtered = getFilteredStock();
+  if (!filtered.length) { toast('No hay items para exportar', true); return; }
+
+  const data = filtered.map((i, idx) => ({
     'Nº': idx + 1,
     'Item': i.name,
     'Categoría': i.category || '',
@@ -1882,19 +1911,21 @@ function exportStock() {
   const ws = XLSX.utils.json_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Stock');
-  
-  // Column widths
   ws['!cols'] = [{ wch: 5 }, { wch: 35 }, { wch: 18 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 40 }];
-  
   XLSX.writeFile(wb, `stock_${new Date().toISOString().split('T')[0]}.xlsx`);
-  toast('Stock exportado a Excel ✓');
+
+  const total = items.length;
+  toast(filtered.length === total ? 'Stock exportado a Excel ✓' : `${filtered.length} de ${total} items exportados ✓`);
 }
 
 function exportDeliveries() {
+  const filtered = getFilteredDeliveries();
+  if (!filtered.length) { toast('No hay entregas para exportar', true); return; }
+
   const rows = [];
-  deliveries.forEach((d, dIdx) => {
-    const num = deliveries.length - dIdx;
-    d.items.forEach((item, iIdx) => {
+  filtered.forEach((d, dIdx) => {
+    const num = deliveries.length - deliveries.indexOf(d);
+    d.items.forEach(item => {
       rows.push({
         'Nº Entrega': `#${num.toString().padStart(4,'0')}`,
         'Fecha': fmtDate(d.date),
@@ -1908,14 +1939,14 @@ function exportDeliveries() {
     });
   });
 
-  if (!rows.length) { toast('No hay entregas para exportar', true); return; }
-
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Entregas');
   ws['!cols'] = [{ wch: 12 }, { wch: 12 }, { wch: 25 }, { wch: 15 }, { wch: 35 }, { wch: 10 }, { wch: 8 }, { wch: 30 }];
   XLSX.writeFile(wb, `entregas_${new Date().toISOString().split('T')[0]}.xlsx`);
-  toast('Entregas exportadas a Excel ✓');
+
+  const total = deliveries.length;
+  toast(filtered.length === total ? 'Entregas exportadas a Excel ✓' : `${filtered.length} de ${total} entregas exportadas ✓`);
 }
 
 // ========== MODAL CLOSE ==========
