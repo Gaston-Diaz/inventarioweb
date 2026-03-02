@@ -1238,6 +1238,13 @@ function getSampleItems() {
 // ========== UTILS ==========
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
+function getLocalDateString() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth() + 1).padStart(2, '0') + '-' +
+    String(d.getDate()).padStart(2, '0');
+}
+
 function toast(msg, isErr = false) {
   const c = document.getElementById('toast-container');
   const t = document.createElement('div');
@@ -1248,7 +1255,16 @@ function toast(msg, isErr = false) {
 }
 
 function fmtDate(d) {
+  //if (!d) return '—';
+  //return new Date(d).toLocaleDateString('es-ES');
   if (!d) return '—';
+
+  // Si es YYYY-MM-DD, no usar new Date()
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const [y, m, day] = d.split('-');
+    return `${day}/${m}/${y}`;
+  }
+
   return new Date(d).toLocaleDateString('es-ES');
 }
 
@@ -1300,7 +1316,8 @@ function logout() {
 async function init() {
   await loadData();
   // Set today's date
-  document.getElementById('del-date').value = new Date().toISOString().split('T')[0];
+  //document.getElementById('del-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('del-date').value = getLocalDateString();
   renderAll();
   initDeliveryRows();
 }
@@ -1779,12 +1796,14 @@ async function submitDelivery() {
 
   const delivery = {
     id: uid(),
-    date: date || new Date().toISOString().split('T')[0],
+    //date: date || new Date().toISOString().split('T')[0],
+    date: date || getLocalDateString(), // fecha local real
     recipient,
     ref,
     notes,
     items: deliveryItems,
-    createdAt: new Date().toISOString()
+    //createdAt: new Date().toISOString()
+    createdAt: new Date().toLocaleString('sv-SE') // hora local
   };
 
   deliveries.unshift(delivery);
@@ -1799,7 +1818,8 @@ function clearDelivery() {
   document.getElementById('del-recipient').value = '';
   document.getElementById('del-ref').value = '';
   document.getElementById('del-notes').value = '';
-  document.getElementById('del-date').value = new Date().toISOString().split('T')[0];
+  //document.getElementById('del-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('del-date').value = getLocalDateString();
   initDeliveryRows();
 }
 
