@@ -1879,11 +1879,30 @@ function showDeliveryDetail(id) {
 }
 
 async function deleteDelivery(id) {
-  if (!confirm('¿Eliminar esta entrega del historial? El stock NO se repondrá.')) return;
+  /*if (!confirm('¿Eliminar esta entrega del historial? El stock NO se repondrá.')) return;
   deliveries = deliveries.filter(d => d.id !== id);
   await saveData();
   renderHistory();
-  toast('Entrega eliminada');
+  toast('Entrega eliminada');*/
+  const delivery = deliveries.find(d => d.id === id);
+  if (!delivery) return;
+
+  if (!confirm('¿Eliminar esta entrega del historial? El stock será repuesto.')) return;
+
+  // 🔁 Devolver stock
+  delivery.items.forEach(row => {
+    const item = items.find(i => i.id === row.itemId);
+    if (item) {
+      item.stock += row.qty;
+    }
+  });
+
+  // 🗑 Eliminar entrega
+  deliveries = deliveries.filter(d => d.id !== id);
+
+  await saveData();
+  renderAll(); // mejor que solo renderHistory
+  toast('Entrega eliminada y stock restaurado');
 }
 
 // ========== EXCEL EXPORT ==========
