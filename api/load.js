@@ -1,6 +1,6 @@
-import { Redis } from '@upstash/redis';
+import { neon } from '@neondatabase/serverless';
 
-const redis = Redis.fromEnv();
+const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -8,9 +8,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const items      = await redis.get('inv-items')      ?? [];
-    const deliveries = await redis.get('inv-deliveries') ?? [];
-    res.status(200).json({ items, deliveries });
+    const rows = await sql`
+      SELECT key, value FROM store
+      WHERE key IN ('inv-items', 'inv-deliveries')
+    `;
+
+    const get = (key) => rows.find(r => r.key === key)?.value ?? [];
+
+    res.status(200).json({
+      items:      get('inv-items'),
+      deliveries: get('inv-deliveries'),
+    });
   } catch (err) {
     console.error('Load error:', err);
     res.status(500).json({ error: 'Error al cargar datos' });

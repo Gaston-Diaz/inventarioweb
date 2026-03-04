@@ -1,6 +1,6 @@
-import { Redis } from '@upstash/redis';
+import { neon } from '@neondatabase/serverless';
 
-const redis = Redis.fromEnv();
+const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,8 +15,16 @@ export default async function handler(req, res) {
     }
 
     await Promise.all([
-      redis.set('inv-items',      items),
-      redis.set('inv-deliveries', deliveries),
+      sql`
+        INSERT INTO store (key, value, updated_at)
+        VALUES ('inv-items', ${JSON.stringify(items)}, NOW())
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+      `,
+      sql`
+        INSERT INTO store (key, value, updated_at)
+        VALUES ('inv-deliveries', ${JSON.stringify(deliveries)}, NOW())
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+      `,
     ]);
 
     res.status(200).json({ ok: true });
