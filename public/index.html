@@ -1402,7 +1402,7 @@ function getStockBadge(item) {
   return `<span class="stock-badge badge-ok">OK</span>`;
 }
 
-function renderStock(search = '', cat = '') {
+/*function renderStock(search = '', cat = '') {
   if (!cat) cat = document.getElementById('cat-filter')?.value || '';
   let data = items.filter(i => {
     const s = search.toLowerCase();
@@ -1415,6 +1415,7 @@ function renderStock(search = '', cat = '') {
     if (activeStateFilter === 'empty') matchState = i.stock === 0;
     return matchSearch && matchCat && matchState;
   });
+  
 
   const tbody = document.getElementById('stock-table');
   if (!data.length) {
@@ -1431,6 +1432,41 @@ function renderStock(search = '', cat = '') {
       <td class="text-center">${getStockBadge(i)}</td>
     </tr>
   `).join('');
+}*/
+function renderStock(search = '', cat = '') {
+  if (!cat) cat = document.getElementById('cat-filter')?.value || '';
+  const s = search.toLowerCase();
+  let data = items.filter(i => {
+    const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s) || (i.desc||'').toLowerCase().includes(s);
+    const matchCat = !cat || i.category === cat;
+    let matchState = true;
+    if (activeStateFilter === 'ok')    matchState = i.stock > 0 && i.stock >= i.minStock;
+    if (activeStateFilter === 'low')   matchState = i.stock > 0 && i.stock < i.minStock;
+    if (activeStateFilter === 'empty') matchState = i.stock === 0;
+    return matchSearch && matchCat && matchState;
+  });
+
+  const tbody = document.getElementById('stock-table');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">No hay items</div></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.map(i => {
+    const descMatchesQuery = s && (i.desc||'').toLowerCase().includes(s) && !i.name.toLowerCase().includes(s);
+    const descHtml = descMatchesQuery
+      ? `<div style="font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;">${highlightMatch(i.desc, search)}</div>`
+      : '';
+    return `
+      <tr>
+        <td><strong>${highlightMatch(i.name, search)}</strong>${descHtml}</td>
+        <td><span class="cat-tag">${i.category || '—'}</span></td>
+        <td class="color-muted">${i.unit || '—'}</td>
+        <td class="text-right color-muted">${i.minStock}</td>
+        <td class="text-right"><strong style="font-family:'DM Mono',monospace">${i.stock}</strong></td>
+        <td class="text-center">${getStockBadge(i)}</td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function updateCatFilter() {
