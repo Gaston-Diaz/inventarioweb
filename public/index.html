@@ -1554,7 +1554,7 @@ function renderDeliveryRows() {
               class="ac-search"
               data-row="${row.id}"
               value="${row.searchText || ''}"
-              placeholder="Buscar item por nombre..."
+              placeholder="Buscar item por nombre o descripcion..."
               autocomplete="off"
               oninput="onAcInput(this, '${row.id}')"
               onfocus="onAcFocus(this, '${row.id}')"
@@ -1603,7 +1603,7 @@ function getStockClass(item) {
   return 'ac-stock-ok';
 }
 
-function openAcDropdown(rowId, query) {
+/*function openAcDropdown(rowId, query) {
   const drop = document.getElementById('ac-drop-' + rowId);
   if (!drop) return;
   const q = query.trim().toLowerCase();
@@ -1621,6 +1621,36 @@ function openAcDropdown(rowId, query) {
         </span>
       </div>
     `).join('');
+  }
+  drop.classList.add('open');
+}*/
+function openAcDropdown(rowId, query) {
+  const drop = document.getElementById('ac-drop-' + rowId);
+  if (!drop) return;
+  const q = query.trim().toLowerCase();
+  const matched = items.filter(i => !q || i.name.toLowerCase().includes(q) || (i.category||'').toLowerCase().includes(q) || (i.desc||'').toLowerCase().includes(q));
+
+  if (!matched.length) {
+    drop.innerHTML = `<div style="padding:12px 16px;font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;">Sin resultados</div>`;
+  } else {
+    drop.innerHTML = matched.map(i => {
+      const descMatchesQuery = q && (i.desc||'').toLowerCase().includes(q) && !i.name.toLowerCase().includes(q);
+      const descHtml = descMatchesQuery
+        ? `<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${highlightMatch(i.desc, query)}</div>`
+        : '';
+      return `
+        <div class="ac-option" data-item="${i.id}" onmousedown="selectAcItem('${rowId}', '${i.id}')">
+          <div style="flex:1;min-width:0;">
+            <div class="ac-option-name">${highlightMatch(i.name, query)}</div>
+            ${descHtml}
+          </div>
+          <span class="ac-option-meta">
+            ${i.category ? `<span class="ac-cat">${i.category}</span>` : ''}
+            <span class="ac-stock ${getStockClass(i)}">${i.stock} ${i.unit||''}</span>
+          </span>
+        </div>
+      `;
+    }).join('');
   }
   drop.classList.add('open');
 }
