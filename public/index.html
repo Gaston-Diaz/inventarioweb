@@ -1406,7 +1406,8 @@ function renderStock(search = '', cat = '') {
   if (!cat) cat = document.getElementById('cat-filter')?.value || '';
   let data = items.filter(i => {
     const s = search.toLowerCase();
-    const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s);
+    //const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s);
+    const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s) || (i.desc||'').toLowerCase().includes(s);
     const matchCat = !cat || i.category === cat;
     let matchState = true;
     if (activeStateFilter === 'ok')    matchState = i.stock > 0 && i.stock >= i.minStock;
@@ -1941,7 +1942,8 @@ function getFilteredStock() {
   const cat    = document.getElementById('cat-filter')?.value || '';
   return items.filter(i => {
     const s = search.toLowerCase();
-    const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s);
+    //const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s);
+    const matchSearch = !s || i.name.toLowerCase().includes(s) || (i.category||'').toLowerCase().includes(s) || (i.desc||'').toLowerCase().includes(s);
     const matchCat    = !cat || i.category === cat;
     let matchState    = true;
     if (activeStateFilter === 'ok')    matchState = i.stock > 0 && i.stock >= i.minStock;
